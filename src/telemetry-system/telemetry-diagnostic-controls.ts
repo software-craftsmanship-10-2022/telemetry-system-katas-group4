@@ -1,33 +1,23 @@
 import ClientConnector from "./client-connector";
+import ClientInfo from "./client-info";
 
 export default class TelemetryDiagnosticControls {
-	private diagnosticChannelConnectionString: string;
-
 	private clientConnector: ClientConnector;
-	private diagnosticInfo: string;
+	private clientInfo: ClientInfo;
 
-	constructor(clientConnector: ClientConnector) {
-		this.diagnosticChannelConnectionString = '*111#';
+	constructor(clientConnector: ClientConnector, clientInfo: ClientInfo) {
 		this.clientConnector = clientConnector;
-		this.diagnosticInfo = '';
-	}
-
-	public readDiagnosticInfo() {
-		return this.diagnosticInfo;
-	}
-
-	public writeDiagnosticInfo(newValue: string) {
-		this.diagnosticInfo = newValue;
+		this.clientInfo = clientInfo;
 	}
 
 	public checkTransmission() {
-		this.diagnosticInfo = '';
+		this.clientInfo.writeDiagnosticInfo('');
 
 		this.clientConnector.disconnect();
 
 		let retryLeft = 3;
 		while (this.clientConnector.getOnlineStatus() === false && retryLeft > 0) {
-			this.clientConnector.connect(this.diagnosticChannelConnectionString);
+			this.clientConnector.connect(this.clientInfo.getConnection());
 			retryLeft -= 1;
 		}
 
@@ -36,6 +26,6 @@ export default class TelemetryDiagnosticControls {
 		}
 
 		this.clientConnector.send(this.clientConnector.diagnosticMessage());
-		this.diagnosticInfo = this.clientConnector.receive();
+		this.clientInfo.writeDiagnosticInfo(this.clientConnector.receive());
 	}
 }
